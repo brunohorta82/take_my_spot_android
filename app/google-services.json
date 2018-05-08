@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "316836781823",
+    "firebase_url": "https://take-my-spot.firebaseio.com",
+    "project_id": "take-my-spot",
+    "storage_bucket": "take-my-spot.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:316836781823:android:0f6cf6a085a80b82",
+        "android_client_info": {
+          "package_name": "brunohorta.pt.takemyspot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "316836781823-joo8vb04odabap6632le35kot15cebh3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1TLvk52BJ4Ujuz-JqE_N68jcxZ0Rp9eU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
