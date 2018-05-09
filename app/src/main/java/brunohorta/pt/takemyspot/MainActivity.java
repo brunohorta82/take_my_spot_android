@@ -7,6 +7,9 @@ import android.os.StrictMode;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -22,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     private double latitude;
     private double longitude;
+    private Button button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,21 +44,33 @@ public class MainActivity extends AppCompatActivity {
             StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
             StrictMode.setVmPolicy(builder.build());
         }
-        SpotRepository.getInstance().registerSpot(new Spot(TakeMySpotApp.getInstance().getPushToken(), 10, 10), new Callback<JsonObject>() {
+
+        button = findViewById(R.id.takeButton);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                registerSpot();
+            }
+        });
+
+        registerLocationUpdates();
+    }
+
+    private void registerSpot() {
+        SpotWrapper.getInstance().registerSpot(new Spot(TakeMySpotApp.getInstance().getPushToken(), latitude, longitude), new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                System.out.println("OK");
+                Toast.makeText(getApplicationContext(), "Your spot is registered", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                System.out.println("FAIL");
+                Toast.makeText(getApplicationContext(), "Error one problem occurs", Toast.LENGTH_SHORT).show();
             }
         });
-        registerLocationUpdates();
     }
 
-    private void registerLocationUpdates(){
+    private void registerLocationUpdates() {
         LocationRequest mLocationRequest = LocationRequest.create();
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setInterval(1000).setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);

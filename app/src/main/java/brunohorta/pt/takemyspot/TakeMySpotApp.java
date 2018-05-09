@@ -15,7 +15,6 @@ public class TakeMySpotApp extends Application {
         mInstance = this;
         OneSignal.startInit(this)
                 .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
-                //.setNotificationOpenedHandler(new ExampleNotificationOpenedHandler(this))
                 .unsubscribeWhenNotificationsAreDisabled(true)
                 .init();
         OneSignal.idsAvailable(new OneSignal.IdsAvailableHandler() {

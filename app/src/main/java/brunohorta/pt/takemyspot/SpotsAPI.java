@@ -11,4 +11,7 @@ public interface SpotsAPI {
     @POST("api/spots/")
     Call<JsonObject> registerSpot(@Body Spot spot);
 
+    @POST("api/spots/grab")
+    Call<JsonObject>grabSpot(@Body SpotIntent spotIntent);
+
 }

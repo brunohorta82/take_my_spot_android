@@ -21,9 +21,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /**
  * Repository handling the work with products and comments.
  */
-public class SpotRepository {
+public class SpotWrapper {
 
-    private static SpotRepository sInstance;
+    private static SpotWrapper sInstance;
 
     private final SpotsAPI spotsAPI;
 
@@ -31,7 +31,11 @@ public class SpotRepository {
         new RegisterSpotAsync(spot, spotsAPI, callback).execute();
     }
 
-    private SpotRepository() {
+    public void takeSpot(SpotIntent spot, Callback<JsonObject> callback) {
+        new TakeSpotAsync(spot, spotsAPI, callback).execute();
+    }
+
+    private SpotWrapper() {
         Gson gson = new GsonBuilder()
                 .setLenient().registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
                     @Override
@@ -54,11 +58,11 @@ public class SpotRepository {
     }
 
 
-    public static SpotRepository getInstance() {
+    public static SpotWrapper getInstance() {
         if (sInstance == null) {
-            synchronized (SpotRepository.class) {
+            synchronized (SpotWrapper.class) {
                 if (sInstance == null) {
-                    sInstance = new SpotRepository();
+                    sInstance = new SpotWrapper();
                 }
             }
         }
