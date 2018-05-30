@@ -1,4 +1,4 @@
-package brunohorta.pt.takemyspot;
+package brunohorta.pt.takemyspot.repository;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -14,6 +14,9 @@ import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 import java.util.Date;
 
+import brunohorta.pt.takemyspot.api.NavigationAPI;
+import brunohorta.pt.takemyspot.application.TakeMySpotApp;
+import brunohorta.pt.takemyspot.entity.NavigationNotification;
 import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -21,21 +24,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /**
  * Repository handling the work with products and comments.
  */
-public class SpotWrapper {
+public class NavigationRepository {
 
-    private static SpotWrapper sInstance;
+    private static NavigationRepository sInstance;
 
-    private final SpotsAPI spotsAPI;
+    private final NavigationAPI navigationAPI;
 
-    public void registerSpot(Spot spot, Callback<JsonObject> callback) {
-        new RegisterSpotAsync(spot, spotsAPI, callback).execute();
-    }
-
-    public void takeSpot(SpotIntent spot, Callback<JsonObject> callback) {
-        new TakeSpotAsync(spot, spotsAPI, callback).execute();
-    }
-
-    private SpotWrapper() {
+    private NavigationRepository() {
         Gson gson = new GsonBuilder()
                 .setLenient().registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
                     @Override
@@ -54,19 +49,34 @@ public class SpotWrapper {
                 .baseUrl("http://192.168.1.20:8080")
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
-        spotsAPI = retrofit.create(SpotsAPI.class);
+        navigationAPI = retrofit.create(NavigationAPI.class);
     }
 
 
-    public static SpotWrapper getInstance() {
+    public static NavigationRepository getInstance() {
         if (sInstance == null) {
-            synchronized (SpotWrapper.class) {
+            synchronized (NavigationRepository.class) {
                 if (sInstance == null) {
-                    sInstance = new SpotWrapper();
+                    sInstance = new NavigationRepository();
                 }
             }
         }
         return sInstance;
+    }
+
+    public void updateUserLocation(double latitude, double longitude, Callback<JsonObject> callback) {
+        TakeMySpotApp.getInstance().getLocationPreferences().updateLocation((float) latitude, (float) longitude);
+        registerCurrentLocation(callback);
+    }
+
+    public void registerCurrentLocation(Callback<JsonObject> callback) {
+        if (TakeMySpotApp.getInstance().getSpotPreferences().getSpot() != null) {
+            long spotId = TakeMySpotApp.getInstance().getSpotPreferences().getSpot().getSpotId();
+            double latitude = TakeMySpotApp.getInstance().getLocationPreferences().getLatitude();
+            double longitude = TakeMySpotApp.getInstance().getLocationPreferences().getLongitude();
+            NavigationNotification navigationNotification = new NavigationNotification(spotId, latitude, longitude, TakeMySpotApp.getInstance().getPushToken());
+            navigationAPI.grabSpot(navigationNotification).enqueue(callback);
+        }
     }
 
 

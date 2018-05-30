@@ -1,4 +1,4 @@
-package brunohorta.pt.takemyspot;
+package brunohorta.pt.takemyspot.entity;
 
 
 public class SpotIntent {

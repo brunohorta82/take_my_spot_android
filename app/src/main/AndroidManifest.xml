@@ -9,9 +9,9 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:name=".TakeMySpotApp"
+        android:name=".application.TakeMySpotApp"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -19,13 +19,19 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".NotificationExtenderBareBonesExample"
+            android:name=".TakeMySpotNotificationExtender"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.onesignal.NotificationExtender" />
             </intent-filter>
         </service>
+        <service android:name=".service.PossibleSpotEvaluatorService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyB1TLvk52BJ4Ujuz-JqE_N68jcxZ0Rp9eU" />
     </application>
 
 </manifest>

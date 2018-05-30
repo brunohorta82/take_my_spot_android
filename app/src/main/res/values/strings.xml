@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Take My Spot</string>
+    <string name="take_my_spot">Take my Spot</string>
+    <string name="new_spot">Spot Available</string>
+    <string name="reserved">Reserved</string>
+    <string name="retrieving_location_data">Retrieving you location data</string>
 </resources>
