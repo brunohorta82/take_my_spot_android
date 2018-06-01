@@ -1,6 +1,7 @@
 package brunohorta.pt.takemyspot.entity;
 
 public class Spot {
+    private long timestamp;
     private long spotId;
     private String senderId;
     private double latitude;
@@ -8,11 +9,13 @@ public class Spot {
     private boolean reserved;
     private double takerLatitude;
     private double takerLongitude;
+    private boolean validated;
 
     public Spot() {
     }
 
-    public Spot(long spotId, String senderId, double latitude, double longitude) {
+    public Spot(long timestamp, long spotId, String senderId, double latitude, double longitude) {
+        this.timestamp = timestamp;
         this.spotId = spotId;
         this.senderId = senderId;
         this.latitude = latitude;
@@ -86,6 +89,22 @@ public class Spot {
     public void markTakerLocation(double takerLatitude, double takerLongitude) {
         setTakerLatitude(takerLatitude);
         setTakerLongitude(takerLongitude);
+    }
+
+    public void setValidated(boolean validated) {
+        this.validated = validated;
+    }
+
+    public boolean isValidated() {
+        return validated;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 }
 

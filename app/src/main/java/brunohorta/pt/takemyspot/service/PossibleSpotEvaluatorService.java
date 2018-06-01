@@ -14,17 +14,18 @@ import static brunohorta.pt.takemyspot.preferences.LocationPreferences.LONGITUDE
 public class PossibleSpotEvaluatorService extends JobIntentService {
     public static String SENDER_ID = "senderId";
     public static String SPOT_ID = "spotId";
+    public static String TIMESTAMP = "timestamp";
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
         double latitude = intent.getDoubleExtra(LATITUDE, -9999);
         double longitude = intent.getDoubleExtra(LONGITUDE, -9999);
+        long timestamp = intent.getLongExtra(TIMESTAMP, System.currentTimeMillis());
         String senderId = intent.getStringExtra(SENDER_ID);
         long spotId = intent.getLongExtra(SPOT_ID, 0);
-        if (latitude != -9999 && longitude != -9999 && SpotRepository.getInstance().getCurrentInterestingSpot() == null && !TakeMySpotApp.getInstance().getPushToken().equals(senderId)) {
-            if (SpotRepository.getInstance().isSpotInteresting(latitude, longitude)) {
-                SpotRepository.getInstance().setInterestingSpotAvailable(new Spot(spotId, senderId, latitude, longitude));
-                System.out.println("!!!!!!" + latitude + ", " + longitude);
+        if (latitude != -9999 && longitude != -9999 && SpotRepository.getInstance().getCurrentInterestingSpot() == null && TakeMySpotApp.getInstance().getPushToken() != null && !TakeMySpotApp.getInstance().getPushToken().equals(senderId)) {
+            if (SpotRepository.getInstance().isSpotInteresting(timestamp, latitude, longitude)) {
+                SpotRepository.getInstance().setInterestingSpotAvailable(new Spot(System.currentTimeMillis(), spotId, senderId, latitude, longitude));
             }
         }
     }

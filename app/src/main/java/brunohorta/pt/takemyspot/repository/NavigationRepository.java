@@ -64,9 +64,11 @@ public class NavigationRepository {
         return sInstance;
     }
 
-    public void updateUserLocation(double latitude, double longitude, Callback<JsonObject> callback) {
+    public void updateUserLocation(double latitude, double longitude, boolean callAPI, Callback<JsonObject> callback) {
         TakeMySpotApp.getInstance().getLocationPreferences().updateLocation((float) latitude, (float) longitude);
-        registerCurrentLocation(callback);
+        if (callAPI) {
+            registerCurrentLocation(callback);
+        }
     }
 
     public void registerCurrentLocation(Callback<JsonObject> callback) {

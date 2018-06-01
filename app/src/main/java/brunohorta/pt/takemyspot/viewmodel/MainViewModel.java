@@ -13,6 +13,7 @@ import com.google.gson.JsonObject;
 import brunohorta.pt.takemyspot.application.TakeMySpotApp;
 import brunohorta.pt.takemyspot.entity.Spot;
 import brunohorta.pt.takemyspot.entity.SpotIntent;
+import brunohorta.pt.takemyspot.entity.SpotValidation;
 import brunohorta.pt.takemyspot.repository.NavigationRepository;
 import brunohorta.pt.takemyspot.repository.SpotRepository;
 import retrofit2.Callback;
@@ -46,11 +47,15 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public void registerSpot(Callback<JsonObject> callback) {
-        mRepository.registerSpot(new Spot(0, TakeMySpotApp.getInstance().getPushToken(), latitude, longitude), callback);
+        mRepository.registerSpot(new Spot(System.currentTimeMillis(), 0, TakeMySpotApp.getInstance().getPushToken(), latitude, longitude), callback);
     }
 
     public void takeSpot(Callback<JsonObject> callback) {
         mRepository.takeSpot(new SpotIntent(TakeMySpotApp.getInstance().getPushToken(), mRepository.getCurrentInterestingSpot().getSpotId()), callback);
+    }
+
+    public void verifySpot(String senderId, Callback<JsonObject> callback) {
+        mRepository.verifySpot(new SpotValidation(mRepository.getCurrentInterestingSpot().getSpotId(), senderId, TakeMySpotApp.getInstance().getPushToken()), callback);
     }
 
     public void updateLocation(LocationResult locationResult, Callback<JsonObject> callback) {
@@ -61,7 +66,7 @@ public class MainViewModel extends AndroidViewModel {
             latitude = locationResult.getLastLocation().getLatitude();
             longitude = locationResult.getLastLocation().getLongitude();
         }
-        mNavRepository.updateUserLocation(latitude, longitude, callback);
+        mNavRepository.updateUserLocation(latitude, longitude, getInterestingSpot() != null, callback);
     }
 
     public double getLatitude() {
@@ -79,6 +84,10 @@ public class MainViewModel extends AndroidViewModel {
 
     public void markSpotAsReserved() {
         this.mRepository.markInterestingSpotAsReserved();
+    }
+
+    public void dismissMyTakenSpot() {
+        this.mRepository.updateMySpotAsTaken(null);
     }
 
     public static class Factory extends ViewModelProvider.NewInstanceFactory {

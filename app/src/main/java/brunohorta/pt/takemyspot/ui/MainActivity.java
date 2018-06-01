@@ -1,17 +1,23 @@
 package brunohorta.pt.takemyspot.ui;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.bluetooth.BluetoothManager;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
-import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
@@ -30,7 +36,17 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.JsonObject;
 
+import org.altbeacon.beacon.Beacon;
+import org.altbeacon.beacon.BeaconConsumer;
+import org.altbeacon.beacon.BeaconParser;
+import org.altbeacon.beacon.BeaconTransmitter;
+
+import java.util.Arrays;
+
 import brunohorta.pt.takemyspot.R;
+import brunohorta.pt.takemyspot.application.TakeMySpotApp;
+import brunohorta.pt.takemyspot.bluetooth.BeaconScanner;
+import brunohorta.pt.takemyspot.bluetooth.BeaconsContants;
 import brunohorta.pt.takemyspot.databinding.ActivityMainBinding;
 import brunohorta.pt.takemyspot.entity.Spot;
 import brunohorta.pt.takemyspot.viewmodel.MainViewModel;
@@ -38,38 +54,53 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, BeaconConsumer {
 
+    private static final int REQUEST_LOCATION = 1;
     private ActivityMainBinding mDataBinding;
     private MainViewModel model;
     private GoogleMap map;
     private boolean reservedSpotMode;
 
+    private BeaconTransmitter mBeaconTransmitter;
+    private BeaconScanner mBeaconScanner;
+
+    private Handler mHandler;
+    private Runnable mStopScanRunnable;
+    private boolean mapLoaded;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mDataBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
         model = ViewModelProviders.of(this, new MainViewModel.Factory(getApplication())).get(MainViewModel.class);
+
+        init();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Storage Permissions
-            final int REQUEST_EXTERNAL_STORAGE = 1;
-            final String[] PERMISSIONS_STORAGE = {
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-            };
-            requestPermissions(PERMISSIONS_STORAGE, REQUEST_EXTERNAL_STORAGE);
-            // Workaround for FileUriExposedException in Android >= M
-            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-            StrictMode.setVmPolicy(builder.build());
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
+                        REQUEST_LOCATION);
+            }
         }
+    }
+
+    private void init() {
         mDataBinding.btnTakeSpot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (model.getLatitude() <= -9999 || model.getLongitude() <= -9999) {
+                    Toast.makeText(MainActivity.this, "While the app doesn't retrieve your current location ypu can not offer your spot!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 model.registerSpot(new Callback<JsonObject>() {
                     @Override
                     public void onResponse(@NonNull Call<JsonObject> call, @NonNull Response<JsonObject> response) {
                         if (response.isSuccessful()) {
                             Toast.makeText(getApplicationContext(), "Your spot is registered", Toast.LENGTH_SHORT).show();
+                            startBeaconMode();
                         } else {
                             Toast.makeText(getApplicationContext(), "You already have a spot under evaluation", Toast.LENGTH_SHORT).show();
                         }
@@ -84,8 +115,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
         registerLocationUpdates();
         subscribeInterestingSpot();
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
         mDataBinding.ibClose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -101,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         if (response.isSuccessful()) {
                             Toast.makeText(getApplicationContext(), "This spot is yours! go grab it before it expires", Toast.LENGTH_SHORT).show();
                             model.markSpotAsReserved();
+                            scanForBeacons();
                         } else {
                             Toast.makeText(getApplicationContext(), "The spot was already taken by someone faster than you!", Toast.LENGTH_SHORT).show();
                         }
@@ -115,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
         mDataBinding.setDisableTakeMySpot(true);
         mDataBinding.setSpot(null);
+        model.dismissCurrentInterestingLocation();
     }
 
     private void subscribeInterestingSpot() {
@@ -128,12 +159,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         model.getMySpotTakenLiveData().observe(this, new Observer<Spot>() {
             @Override
             public void onChanged(@Nullable Spot spot) {
-                reservedSpotMode = spot != null;
-                enterExitReservedSpotMode(spot != null);
+                reservedSpotMode = spot != null && !spot.isValidated();
+                enterExitReservedSpotMode(reservedSpotMode);
                 if (reservedSpotMode) {
                     drawTakerRoute(spot.getLatitude(), spot.getLongitude(), spot.getTakerLatitude(), spot.getTakerLongitude());
                 } else {
                     verifyCurrentInterestingSpot(model.getInterestingSpot());
+                }
+                if (spot != null && !spot.isValidated()) {
+                    model.dismissMyTakenSpot();
+                    Toast.makeText(getApplicationContext(), "The driver who reserved your spot has arrived! Thanks for your time", Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -154,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void drawRoute(double latitude, double longitude, double userLatitude, double userLongitude) {
-        if (map != null) {
+        if (map != null && mapLoaded) {
             map.clear();
             PolylineOptions options = new PolylineOptions()
                     .width(5)
@@ -183,8 +218,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void registerLocationUpdates() {
         LocationRequest mLocationRequest = LocationRequest.create();
-        mLocationRequest.setFastestInterval(1000);
-        mLocationRequest.setInterval(1000).setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setFastestInterval(3000);
+        mLocationRequest.setInterval(3000).setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         FusedLocationProviderClient mLocationClient = new FusedLocationProviderClient(this);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -214,6 +249,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
         map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        map.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                mapLoaded = true;
+            }
+        });
     }
 
     public void enterExitReservedSpotMode(boolean enter) {
@@ -227,7 +268,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     private void drawTakerRoute(double latitude, double longitude, double takerLatitude, double takerLongitude) {
-        if (map != null) {
+        if (map != null && mapLoaded) {
             map.clear();
             PolylineOptions options = new PolylineOptions()
                     .width(5)
@@ -253,4 +294,179 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             System.out.println(latLng + "->" + userLatLng);
         }
     }
+
+
+    private void startBeaconMode() {
+        if (checkPrerequisites()) {
+            // Sets up to transmit as an AltBeacon-style beacon.  If you wish to transmit as a different
+            // type of beacon, simply provide a different parser expression.  To find other parser expressions,
+            // for other beacon types, do a Google search for "setBeaconLayout" including the quotes
+            mBeaconTransmitter = new BeaconTransmitter(this, new BeaconParser().setBeaconLayout(BeaconsContants.BEACONS_LAYOUT_CONDUCTOR));
+            // Transmit a beacon with Identifiers 2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6 1 2
+            Beacon beacon = new Beacon.Builder()
+                    .setBluetoothName("TakeMySpot")
+                    .setId1(TakeMySpotApp.getInstance().getPushToken())
+                    .setId2("1")
+                    .setId3("2")
+                    .setManufacturer(0x0000) // Choose a number of 0x00ff or less as some devices cannot detect beacons with a manufacturer code > 0x00ff
+                    .setTxPower(-59)
+                    .setDataFields(Arrays.asList(new Long[]{0l}))
+                    .build();
+            mBeaconTransmitter.startAdvertising(beacon);
+        }
+    }
+
+    private boolean checkPrerequisites() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Bluetooth LE not supported by this device's operating system");
+            builder.setMessage("You will not be able to transmit as a Beacon");
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    //TODO finish();
+                }
+
+            });
+            builder.show();
+            return false;
+        }
+        if (!getApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Bluetooth LE not supported by this device");
+            builder.setMessage("You will not be able to transmit as a Beacon");
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    //TODO finish();
+                }
+
+            });
+            builder.show();
+            return false;
+        }
+        if (!((BluetoothManager) getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter().isEnabled()) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Bluetooth not enabled");
+            builder.setMessage("Please enable Bluetooth and restart this app.");
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    //TODO finish();
+                }
+
+            });
+            builder.show();
+            return false;
+        }
+
+        try {
+            // Check to see if the getBluetoothLeAdvertiser is available.  If not, this will throw an exception indicating we are not running Android L
+            ((BluetoothManager) this.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter().getBluetoothLeAdvertiser();
+        } catch (Exception e) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Bluetooth LE advertising unavailable");
+            builder.setMessage("Sorry, the operating system on this device does not support Bluetooth LE advertising.  As of July 2014, only the Android L preview OS supports this feature in user-installed apps.");
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    //TODO finish();
+                }
+
+            });
+            builder.show();
+            return false;
+
+        }
+        return true;
+    }
+
+    private void scanForBeacons() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        REQUEST_LOCATION);
+                return;
+            }
+        }
+
+        mBeaconScanner = new BeaconScanner(this) {
+            @Override
+            public void checkSpot(String senderId, final VerifyBeaconListener verifyBeaconListener) {
+                model.verifySpot(senderId, new Callback<JsonObject>() {
+                    @Override
+                    public void onResponse(@NonNull Call<JsonObject> call, @NonNull Response<JsonObject> response) {
+                        JsonObject body = response.body();
+                        if (response.isSuccessful() && body != null && body.get("result").getAsBoolean()) {
+                            Toast.makeText(getApplicationContext(), "Your spot has been validated! You can now enjoy it!", Toast.LENGTH_SHORT).show();
+                            verifyBeaconListener.onBeaconValidated();
+                            mBeaconScanner.unbind();
+                            mHandler.removeCallbacks(mStopScanRunnable);
+                            model.dismissCurrentInterestingLocation();
+                        } else {
+                            verifyBeaconListener.onBeaconValidationFailed();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<JsonObject> call, @NonNull Throwable t) {
+                        Toast.makeText(getApplicationContext(), "Something went wrong validating the spot", Toast.LENGTH_SHORT).show();
+                        verifyBeaconListener.onBeaconValidationFailed();
+                    }
+                });
+            }
+        };
+        mBeaconScanner.scan();
+
+        if (mHandler == null) {
+            mHandler = new Handler();
+        }
+
+        if (mStopScanRunnable == null) {
+            mStopScanRunnable = new Runnable() {
+
+                @Override
+                public void run() {
+                    mBeaconScanner.unbind();
+                }
+            };
+        }
+        mHandler.postDelayed(mStopScanRunnable, 5000);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_LOCATION: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    registerLocationUpdates();
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mBeaconTransmitter != null) {
+            mBeaconTransmitter.stopAdvertising();
+        }
+        if (mBeaconScanner != null) {
+            mBeaconScanner.unbind();
+        }
+    }
+
+    @Override
+    public void onBeaconServiceConnect() {
+        mBeaconScanner.onBeaconServiceConnect();
+    }
+
 }

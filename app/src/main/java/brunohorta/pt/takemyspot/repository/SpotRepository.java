@@ -23,6 +23,7 @@ import brunohorta.pt.takemyspot.api.SpotsAPI;
 import brunohorta.pt.takemyspot.application.TakeMySpotApp;
 import brunohorta.pt.takemyspot.entity.Spot;
 import brunohorta.pt.takemyspot.entity.SpotIntent;
+import brunohorta.pt.takemyspot.entity.SpotValidation;
 import brunohorta.pt.takemyspot.preferences.LocationPreferences;
 import retrofit2.Callback;
 import retrofit2.Retrofit;
@@ -82,12 +83,15 @@ public class SpotRepository {
         spotsAPI.grabSpot(spot).enqueue(callback);
     }
 
-    public boolean isSpotInteresting(double latitude, double longitude) {
+    public void verifySpot(SpotValidation spot, Callback<JsonObject> callback) {
+        spotsAPI.verifySpot(spot).enqueue(callback);
+    }
+
+    public boolean isSpotInteresting(long timestamp, double latitude, double longitude) {
         LocationPreferences locationPreferences = TakeMySpotApp.getInstance().getLocationPreferences();
-        if (locationPreferences.getLatitude() <= -9999 || locationPreferences.getLongitude() <= -9999) {
+        if (locationPreferences.getLatitude() <= -9999 || locationPreferences.getLongitude() <= -9999 || System.currentTimeMillis() - timestamp > 60000) {
             return false;
         }
-
         GeometricShapeFactory shapeFactory = new GeometricShapeFactory();
         shapeFactory.setNumPoints(32);
         shapeFactory.setCentre(new Coordinate(latitude, longitude));//there are your coordinates
@@ -119,7 +123,7 @@ public class SpotRepository {
 
     public void checkAndDismissInterestingLocation() {
         Spot currentInterestingSpot = getCurrentInterestingSpot();
-        if (currentInterestingSpot != null && !isSpotInteresting(currentInterestingSpot.getLatitude(), currentInterestingSpot.getLongitude())) {
+        if (currentInterestingSpot != null && !isSpotInteresting(currentInterestingSpot.getTimestamp(), currentInterestingSpot.getLatitude(), currentInterestingSpot.getLongitude())) {
             setInterestingSpotAvailable(null);
         }
     }
