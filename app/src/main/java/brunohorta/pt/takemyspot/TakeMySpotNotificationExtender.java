@@ -32,8 +32,14 @@ public class TakeMySpotNotificationExtender extends NotificationExtenderService 
             if (jsonObject == null || jsonObject.isNull("type") || jsonObject.getString("type") == null) {//if no message type is present we ignore the notification
                 return true;
             }
-            if (jsonObject.getString("type").equals(MessageType.NEW_SPOT.name()) && SpotRepository.getInstance().getCurrentInterestingSpot() == null
-                    && !jsonObject.getString(SENDER_ID).equals(TakeMySpotApp.getInstance().getPushToken())) {
+            double latitude = jsonObject.isNull(LATITUDE) ? 0 : jsonObject.getDouble(LATITUDE);
+            double longitude = jsonObject.isNull(LONGITUDE) ? 0 : jsonObject.getDouble(LONGITUDE);
+            long timestamp = jsonObject.isNull(TIMESTAMP) ? System.currentTimeMillis() : jsonObject.getLong(TIMESTAMP);
+            if (jsonObject.getString("type").equals(MessageType.NEW_SPOT.name())) {
+                if (SpotRepository.getInstance().getCurrentInterestingSpot() != null
+                        || jsonObject.getString(SENDER_ID).equals(TakeMySpotApp.getInstance().getPushToken())) {
+                    return true;
+                }
                 //Intent i = new Intent(TakeMySpotApp.getInstance(), PossibleSpotEvaluatorService.class);
                 //i.putExtra(LocationPreferences.LATITUDE, jsonObject.getDouble(LocationPreferences.LATITUDE));
                 //i.putExtra(LocationPreferences.LONGITUDE, jsonObject.getDouble(LocationPreferences.LONGITUDE));
@@ -42,9 +48,6 @@ public class TakeMySpotNotificationExtender extends NotificationExtenderService 
                 //i.putExtra(PossibleSpotEvaluatorService.TIMESTAMP, jsonObject.getLong(PossibleSpotEvaluatorService.TIMESTAMP));
                 //PossibleSpotEvaluatorService.enqueueWork(TakeMySpotApp.getInstance(), PossibleSpotEvaluatorService.class, 1000, i);
 
-                double latitude = jsonObject.getDouble(LATITUDE);
-                double longitude = jsonObject.getDouble(LONGITUDE);
-                long timestamp = jsonObject.getLong(TIMESTAMP);
                 String senderId = jsonObject.getString(SENDER_ID);
                 long spotId = jsonObject.getLong(SPOT_ID);
                 if (SpotRepository.getInstance().getCurrentInterestingSpot() == null && TakeMySpotApp.getInstance().getPushToken() != null && !TakeMySpotApp.getInstance().getPushToken().equals(senderId)) {
@@ -57,6 +60,8 @@ public class TakeMySpotNotificationExtender extends NotificationExtenderService 
             } else if (jsonObject.getString("type").equals(MessageType.TIMEOUT.name())) {
                 if (SpotRepository.getInstance().getCurrentInterestingSpot() != null && Spot.isSame(SpotRepository.getInstance().getCurrentInterestingSpot(), jsonObject.getLong(SPOT_ID))) {
                     SpotRepository.getInstance().setInterestingSpotAvailable(null);
+                } else {
+                    return true;
                 }
             } else if (jsonObject.getString("type").equals(MessageType.NAVIGATION.name())) {
                 Spot value = SpotRepository.getInstance().getMySpotTakenLiveData().getValue();
@@ -66,7 +71,8 @@ public class TakeMySpotNotificationExtender extends NotificationExtenderService 
                             jsonObject.getDouble(LocationPreferences.LONGITUDE));
                 }
                 return true;
-            } else if (jsonObject.getString("type").equals(MessageType.RESERVED.name())) {
+            } else if (jsonObject.getString("type").equals(MessageType.RESERVED.name()) &&
+                    SpotRepository.getInstance().isSpotInteresting(timestamp, latitude, longitude)) {
                 Spot spot = new Spot(System.currentTimeMillis(), jsonObject.getLong(SPOT_ID),
                         //jsonObject.getString(PossibleSpotEvaluatorService.SENDER_ID),
                         TakeMySpotApp.getInstance().getPushToken(),

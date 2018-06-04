@@ -77,7 +77,7 @@ public abstract class BeaconScanner {
         public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
             if (beacons.size() > 0) {
                 Beacon nearestBeacon = beacons.iterator().next();
-                if (nearestBeacon != null && !mIsOpened && nearestBeacon.getDistance() < 5) {
+                if (nearestBeacon != null && !mIsOpened && nearestBeacon.getDistance() < .01/*5*/) {
                     mIsOpened = true;
                     checkSpot(nearestBeacon.getId1().toString(), new VerifyBeaconListener() {
                         @Override

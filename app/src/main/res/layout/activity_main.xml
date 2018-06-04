@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
+<layout xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -16,62 +16,168 @@
 
     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/light_gray"
         tools:context="brunohorta.pt.takemyspot.ui.MainActivity">
 
-        <Button
-            android:id="@+id/btn_take_spot"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:enabled="@{!disableTakeMySpot}"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:text="@string/take_my_spot"
+        <android.support.v7.widget.CardView
+            android:id="@+id/cd_take_spot"
             style="?borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:text="@string/take_my_spot"
             app:layout_constraintBottom_toTopOf="@+id/cl_interesting_spot"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:layout_editor_absoluteX="wrap_content"
-            tools:layout_editor_absoluteY="wrap_content" />
+            app:layout_constraintVertical_bias="0">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_take_spot_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/righteous"
+                    android:text="@string/take_spot_title"
+                    android:textAllCaps="true"
+                    android:textColor="@color/colorAccent"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:id="@+id/tv_take_spot_desc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginStart="16dp"
+                    android:fontFamily="@font/orienta"
+                    android:text="@string/take_spot_desc"
+                    android:textColor="@android:color/black" />
+
+                <Button
+                    android:id="@+id/btn_take_spot"
+                    style="?borderlessButtonStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="8dp"
+                    android:enabled="@{!disableTakeMySpot}"
+                    android:fontFamily="@font/orienta"
+                    android:text="@string/take_my_spot" />
+            </LinearLayout>
+        </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/cl_no_spot"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cd_take_spot"
+            app:layout_constraintVertical_bias="0">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_no_spot_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/righteous"
+                    android:text="@string/no_spots_nearby"
+                    android:textAllCaps="true"
+                    android:textColor="@color/colorAccent"
+                    android:textSize="24sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintHorizontal_bias="0"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="0" />
+
+                <TextView
+                    android:id="@+id/tv_no_spot_desc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="24dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginStart="16dp"
+                    android:fontFamily="@font/orienta"
+                    android:text="@string/no_spot_available"
+                    android:textColor="@android:color/black"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_no_spot_title" />
+
+            </LinearLayout>
+        </android.support.v7.widget.CardView>
 
         <android.support.v7.widget.CardView
             android:id="@+id/cl_interesting_spot"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_margin="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/tv_loading_location_info"
+            android:layout_marginBottom="24dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/pb"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btn_take_spot">
+            app:layout_constraintTop_toBottomOf="@+id/cd_take_spot">
 
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
-
 
                 <fragment
                     android:id="@+id/map"
                     android:name="com.google.android.gms.maps.SupportMapFragment"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_margin="8dp"
-                    app:layout_constraintBottom_toTopOf="@+id/tv_title"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@+id/tv_title" />
 
                 <TextView
                     android:id="@+id/tv_reserved"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="8dp"
+                    android:layout_height="0dp"
+                    android:layout_marginEnd="8dp"
                     android:background="@color/green"
+                    android:fontFamily="@font/righteous"
+                    android:gravity="center"
+                    android:paddingEnd="8dp"
+                    android:paddingStart="8dp"
                     android:text="@string/reserved"
                     android:textAllCaps="true"
-                    android:padding="8dp"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
                     android:visibility="@{spot != null &amp;&amp; spot.reserved?View.VISIBLE:View.INVISIBLE}"
@@ -83,17 +189,22 @@
                 <TextView
                     android:id="@+id/tv_title"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="8dp"
+                    android:layout_height="32dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/righteous"
+                    android:gravity="center"
                     android:text="@string/new_spot"
                     android:textAllCaps="true"
-                    android:textColor="@android:color/black"
-                    android:textSize="20sp"
-                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:textColor="@color/colorAccent"
+                    android:textSize="24sp"
+                    app:layout_constraintBottom_toTopOf="parent"
                     app:layout_constraintHorizontal_bias="0"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/map" />
+                    app:layout_constraintTop_toTopOf="@+id/map" />
 
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/ib_close"
@@ -101,18 +212,17 @@
                     android:layout_height="wrap_content"
                     android:visibility="@{spot != null &amp;&amp; spot.reserved?View.INVISIBLE:View.VISIBLE}"
                     app:fabSize="normal"
-                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintHorizontal_bias="1"
                     app:layout_constraintHorizontal_chainStyle="packed"
                     app:layout_constraintLeft_toLeftOf="@+id/tv_title"
                     app:layout_constraintRight_toLeftOf="@+id/ib_accept"
+                    app:layout_constraintTop_toTopOf="parent"
                     app:srcCompat="@drawable/close" />
 
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/ib_accept"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
                     android:layout_marginStart="8dp"
                     android:visibility="@{spot != null &amp;&amp;  spot.reserved?View.INVISIBLE:View.VISIBLE}"
                     app:fabSize="normal"
@@ -121,29 +231,46 @@
                     app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/ib_close"
                     app:srcCompat="@drawable/accept" />
+
+                <io.github.krtkush.lineartimer.LinearTimerView
+                    android:id="@+id/linearTimer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="8dp"
+                    app:radius="20dp"
+                    app:strokeWidth="3dp" />
             </android.support.constraint.ConstraintLayout>
         </android.support.v7.widget.CardView>
-
-        <TextView
-            android:id="@+id/tv_loading_location_info"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="@string/retrieving_location_data"
-            android:visibility="@{disableTakeMySpot?View.VISIBLE:View.INVISIBLE}"
-            app:layout_constraintBottom_toTopOf="@+id/pb"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cl_interesting_spot" />
 
         <ProgressBar
             android:id="@+id/pb"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
             android:visibility="@{disableTakeMySpot?View.VISIBLE:View.INVISIBLE}"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent" />
+            app:layout_constraintRight_toLeftOf="@+id/tv_loading_location_info"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <TextView
+            android:id="@+id/tv_loading_location_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/orienta"
+            android:text="@string/retrieving_location_data"
+            android:visibility="@{disableTakeMySpot?View.VISIBLE:View.INVISIBLE}"
+            app:layout_constraintBottom_toBottomOf="@+id/pb"
+            app:layout_constraintLeft_toRightOf="@+id/pb"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/pb" />
+
     </android.support.constraint.ConstraintLayout>
 </layout>

@@ -50,6 +50,8 @@ import brunohorta.pt.takemyspot.bluetooth.BeaconsContants;
 import brunohorta.pt.takemyspot.databinding.ActivityMainBinding;
 import brunohorta.pt.takemyspot.entity.Spot;
 import brunohorta.pt.takemyspot.viewmodel.MainViewModel;
+import io.github.krtkush.lineartimer.LinearTimer;
+import io.github.krtkush.lineartimer.LinearTimerStates;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -68,12 +70,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Handler mHandler;
     private Runnable mStopScanRunnable;
     private boolean mapLoaded;
+    private SupportMapFragment mapFragment;
+    private LinearTimer linearTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mDataBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         model = ViewModelProviders.of(this, new MainViewModel.Factory(getApplication())).get(MainViewModel.class);
 
@@ -88,9 +92,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void init() {
+        linearTimer = new LinearTimer.Builder()
+                .linearTimerView(mDataBinding.linearTimer)
+                //.duration(60 * 1000)
+                .duration(60 * 1000)
+                .build();
         mDataBinding.btnTakeSpot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                try {
+                    linearTimer.resetTimer();
+                } catch (Exception e) {
+                }
+                try {
+                    linearTimer = new LinearTimer.Builder()
+                            .linearTimerView(mDataBinding.linearTimer)
+                            //.duration(60 * 1000)
+                            .duration(60 * 1000)
+                            .build();
+                    linearTimer.startTimer();
+                } catch (IllegalStateException e) {
+                    e.printStackTrace();
+                }
                 if (model.getLatitude() <= -9999 || model.getLongitude() <= -9999) {
                     Toast.makeText(MainActivity.this, "While the app doesn't retrieve your current location ypu can not offer your spot!", Toast.LENGTH_SHORT).show();
                     return;
@@ -131,6 +154,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             Toast.makeText(getApplicationContext(), "This spot is yours! go grab it before it expires", Toast.LENGTH_SHORT).show();
                             model.markSpotAsReserved();
                             scanForBeacons();
+                            mDataBinding.linearTimer.setVisibility(View.VISIBLE);
+                            try {
+                                linearTimer.resetTimer();
+                            } catch (Exception e) {
+                            }
+                            try {
+                                linearTimer = new LinearTimer.Builder()
+                                        .linearTimerView(mDataBinding.linearTimer)
+                                        //.duration(60 * 1000)
+                                        .duration(60 * 1000)
+                                        .build();
+                                linearTimer.startTimer();
+                            } catch (IllegalStateException e) {
+                                e.printStackTrace();
+                            }
                         } else {
                             Toast.makeText(getApplicationContext(), "The spot was already taken by someone faster than you!", Toast.LENGTH_SHORT).show();
                         }
@@ -161,12 +199,34 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onChanged(@Nullable Spot spot) {
                 reservedSpotMode = spot != null && !spot.isValidated();
                 enterExitReservedSpotMode(reservedSpotMode);
-                if (reservedSpotMode) {
+                if (reservedSpotMode && spot != null) {
                     drawTakerRoute(spot.getLatitude(), spot.getLongitude(), spot.getTakerLatitude(), spot.getTakerLongitude());
+                    mDataBinding.linearTimer.setVisibility(View.VISIBLE);
+                    mDataBinding.clInterestingSpot.setVisibility(View.VISIBLE);
+                    mDataBinding.clNoSpot.setVisibility(View.INVISIBLE);
+                    if (linearTimer.getState() != LinearTimerStates.ACTIVE) {
+                        try {
+                            linearTimer.resetTimer();
+                        } catch (Exception e) {
+                        }
+                        try {
+                            linearTimer = new LinearTimer.Builder()
+                                    .linearTimerView(mDataBinding.linearTimer)
+                                    //.duration(60 * 1000)
+                                    .duration(60 * 1000)
+                                    .build();
+                            linearTimer.startTimer();
+                        } catch (IllegalStateException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    //mDataBinding.btnTakeSpot.setEnabled(false);
                 } else {
+                    mDataBinding.linearTimer.setVisibility(View.INVISIBLE);
+                    //mDataBinding.btnTakeSpot.setEnabled(true);
                     verifyCurrentInterestingSpot(model.getInterestingSpot());
                 }
-                if (spot != null && !spot.isValidated()) {
+                if (spot != null && spot.isValidated()) {
                     model.dismissMyTakenSpot();
                     Toast.makeText(getApplicationContext(), "The driver who reserved your spot has arrived! Thanks for your time", Toast.LENGTH_LONG).show();
                 }
@@ -180,9 +240,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return;
         }
         if (spot == null || model.getLatitude() <= -9999 || model.getLongitude() <= -9999) {
-            mDataBinding.clInterestingSpot.setVisibility(View.GONE);
+            mDataBinding.clInterestingSpot.setVisibility(View.INVISIBLE);
+            mDataBinding.clNoSpot.setVisibility(View.VISIBLE);
         } else {
             mDataBinding.clInterestingSpot.setVisibility(View.VISIBLE);
+            mDataBinding.clNoSpot.setVisibility(View.INVISIBLE);
             drawRoute(spot.getLatitude(), spot.getLongitude(), model.getLatitude(), model.getLongitude());
             mDataBinding.setSpot(spot);
         }
@@ -239,7 +301,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 });
                 //mDataBinding.tvLocation.setText(locationResult.getLastLocation() == null ? "-, -" : (locationResult.getLastLocation().getLatitude() + ", " + locationResult.getLastLocation().getLongitude()));
-                verifyCurrentInterestingSpot(model.getInterestingSpot());
+                if (model.getMySpotTakenLiveData().getValue() == null) {
+                    verifyCurrentInterestingSpot(model.getInterestingSpot());
+                }
                 mDataBinding.setDisableTakeMySpot(locationResult.getLastLocation() == null);
             }
         }, Looper.myLooper());
@@ -258,8 +322,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void enterExitReservedSpotMode(boolean enter) {
-        mDataBinding.btnTakeSpot.setVisibility(enter ? View.INVISIBLE : View.VISIBLE);
-        mDataBinding.clInterestingSpot.setVisibility(enter ? View.VISIBLE : View.INVISIBLE);
+        //mDataBinding.btnTakeSpot.setVisibility(enter ? View.INVISIBLE : View.VISIBLE);
+        //mDataBinding.clInterestingSpot.setVisibility(enter ? View.VISIBLE : View.INVISIBLE);
         mDataBinding.tvTitle.setVisibility(enter ? View.INVISIBLE : View.VISIBLE);
         mDataBinding.tvReserved.setVisibility(enter ? View.INVISIBLE : View.VISIBLE);
         mDataBinding.ibAccept.setVisibility(enter ? View.INVISIBLE : View.VISIBLE);

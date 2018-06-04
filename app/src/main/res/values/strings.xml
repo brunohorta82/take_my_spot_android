@@ -3,5 +3,9 @@
     <string name="take_my_spot">Take my Spot</string>
     <string name="new_spot">Spot Available</string>
     <string name="reserved">Reserved</string>
-    <string name="retrieving_location_data">Retrieving you location data</string>
+    <string name="retrieving_location_data">Retrieving you location</string>
+    <string name="no_spots_nearby">No spots to take</string>
+    <string name="no_spot_available">No spot is available near you at the moment!\n\nIf any opportunity appears we\'ll let you know.</string>
+    <string name="take_spot_desc">If you are leaving your parking spot\nJust let someone else take it just by pressing the button bellow.</string>
+    <string name="take_spot_title">Share your spot</string>
 </resources>
