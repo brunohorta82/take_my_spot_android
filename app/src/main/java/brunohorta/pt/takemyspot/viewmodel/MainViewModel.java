@@ -54,7 +54,10 @@ public class MainViewModel extends AndroidViewModel {
             @Override
             public void onResponse(@NonNull Call<Spot> call, @NonNull Response<Spot> response) {
                 if (response.isSuccessful()) {
-                    mRepository.updateMySpotAsTaken(response.body());
+                    Spot body = response.body();
+                    body.setTakerLatitude(body.getLatitude());
+                    body.setTakerLongitude(body.getLongitude());
+                    mRepository.updateMySpotAsTaken(body);
                 }
                 callback.onResponse(call, response);
             }
