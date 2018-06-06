@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean mapLoaded;
     private SupportMapFragment mapFragment;
     private LinearTimer linearTimer;
+    private LinearTimer linearTimerMySpot;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +98,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //.duration(60 * 1000)
                 .duration(60 * 1000)
                 .build();
+        linearTimerMySpot = new LinearTimer.Builder()
+                .linearTimerView(mDataBinding.linearTimerMySpot)
+                //.duration(60 * 1000)
+                .duration(60 * 1000)
+                .build();
         mDataBinding.btnTakeSpot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -118,19 +124,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     Toast.makeText(MainActivity.this, "While the app doesn't retrieve your current location ypu can not offer your spot!", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                model.registerSpot(new Callback<JsonObject>() {
+                model.registerSpot(new Callback<Spot>() {
                     @Override
-                    public void onResponse(@NonNull Call<JsonObject> call, @NonNull Response<JsonObject> response) {
+                    public void onResponse(@NonNull Call<Spot> call, @NonNull Response<Spot> response) {
                         if (response.isSuccessful()) {
                             Toast.makeText(getApplicationContext(), "Your spot is registered", Toast.LENGTH_SHORT).show();
                             startBeaconMode();
+                            mDataBinding.btnTakeSpot.setVisibility(View.GONE);
+                            mDataBinding.linearTimerMySpot.setVisibility(View.VISIBLE);
+                            try {
+                                linearTimerMySpot.resetTimer();
+                            } catch (Exception e) {
+                            }
+                            linearTimerMySpot = new LinearTimer.Builder()
+                                    .linearTimerView(mDataBinding.linearTimerMySpot)
+                                    //.duration(60 * 1000)
+                                    .duration(60 * 1000)
+                                    .build();
+                            try {
+                                linearTimerMySpot.startTimer();
+                            } catch (IllegalStateException e) {
+                                e.printStackTrace();
+                            }
                         } else {
                             Toast.makeText(getApplicationContext(), "You already have a spot under evaluation", Toast.LENGTH_SHORT).show();
                         }
                     }
 
                     @Override
-                    public void onFailure(@NonNull Call<JsonObject> call, @NonNull Throwable t) {
+                    public void onFailure(@NonNull Call<Spot> call, @NonNull Throwable t) {
                         Toast.makeText(getApplicationContext(), "Error one problem occurs", Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -160,11 +182,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             } catch (Exception e) {
                             }
                             try {
-                                linearTimer = new LinearTimer.Builder()
+                                /*linearTimer = new LinearTimer.Builder()
                                         .linearTimerView(mDataBinding.linearTimer)
                                         //.duration(60 * 1000)
                                         .duration(60 * 1000)
-                                        .build();
+                                        .build();*/
                                 linearTimer.startTimer();
                             } catch (IllegalStateException e) {
                                 e.printStackTrace();
@@ -197,6 +219,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         model.getMySpotTakenLiveData().observe(this, new Observer<Spot>() {
             @Override
             public void onChanged(@Nullable Spot spot) {
+                if (spot == null) {
+                    mDataBinding.linearTimerMySpot.setVisibility(View.GONE);
+                    mDataBinding.btnTakeSpot.setVisibility(View.VISIBLE);
+                }
                 reservedSpotMode = spot != null && !spot.isValidated();
                 enterExitReservedSpotMode(reservedSpotMode);
                 if (reservedSpotMode && spot != null) {
@@ -210,11 +236,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         } catch (Exception e) {
                         }
                         try {
-                            linearTimer = new LinearTimer.Builder()
+                            /*linearTimer = new LinearTimer.Builder()
                                     .linearTimerView(mDataBinding.linearTimer)
                                     //.duration(60 * 1000)
                                     .duration(60 * 1000)
-                                    .build();
+                                    .build();*/
                             linearTimer.startTimer();
                         } catch (IllegalStateException e) {
                             e.printStackTrace();

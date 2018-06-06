@@ -75,7 +75,7 @@ public class SpotRepository {
         return sInstance;
     }
 
-    public void registerSpot(Spot spot, Callback<JsonObject> callback) {
+    public void registerSpot(Spot spot, Callback<Spot> callback) {
         spotsAPI.registerSpot(spot).enqueue(callback);
     }
 

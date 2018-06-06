@@ -16,7 +16,9 @@ import brunohorta.pt.takemyspot.entity.SpotIntent;
 import brunohorta.pt.takemyspot.entity.SpotValidation;
 import brunohorta.pt.takemyspot.repository.NavigationRepository;
 import brunohorta.pt.takemyspot.repository.SpotRepository;
+import retrofit2.Call;
 import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainViewModel extends AndroidViewModel {
 
@@ -46,8 +48,22 @@ public class MainViewModel extends AndroidViewModel {
         return mRepository.getCurrentInterestingSpot();
     }
 
-    public void registerSpot(Callback<JsonObject> callback) {
-        mRepository.registerSpot(new Spot(System.currentTimeMillis(), 0, TakeMySpotApp.getInstance().getPushToken(), latitude, longitude), callback);
+    public void registerSpot(final Callback<Spot> callback) {
+        final Spot spot = new Spot(System.currentTimeMillis(), 0, TakeMySpotApp.getInstance().getPushToken(), latitude, longitude);
+        mRepository.registerSpot(spot, new Callback<Spot>() {
+            @Override
+            public void onResponse(@NonNull Call<Spot> call, @NonNull Response<Spot> response) {
+                if (response.isSuccessful()) {
+                    mRepository.updateMySpotAsTaken(response.body());
+                }
+                callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Spot> call, @NonNull Throwable t) {
+                callback.onFailure(call, t);
+            }
+        });
     }
 
     public void takeSpot(Callback<JsonObject> callback) {

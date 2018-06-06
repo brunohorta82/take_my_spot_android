@@ -26,8 +26,8 @@ public class TakeMySpotNotificationExtender extends NotificationExtenderService 
     @Override
     protected boolean onNotificationProcessing(OSNotificationReceivedResult receivedResult) {
         // Read properties from result.
-        //System.out.println("notification received");
         JSONObject jsonObject = receivedResult.payload.additionalData;
+        System.out.println("notification received: " + jsonObject.toString());
         try {
             if (jsonObject == null || jsonObject.isNull("type") || jsonObject.getString("type") == null) {//if no message type is present we ignore the notification
                 return true;
@@ -61,7 +61,12 @@ public class TakeMySpotNotificationExtender extends NotificationExtenderService 
                 if (SpotRepository.getInstance().getCurrentInterestingSpot() != null && Spot.isSame(SpotRepository.getInstance().getCurrentInterestingSpot(), jsonObject.getLong(SPOT_ID))) {
                     SpotRepository.getInstance().setInterestingSpotAvailable(null);
                 } else {
-                    return true;
+                    Spot value = SpotRepository.getInstance().getMySpotTakenLiveData().getValue();
+                    if (value != null && Spot.isSame(value, jsonObject.getLong(SPOT_ID))) {
+                        SpotRepository.getInstance().updateMySpotAsTaken(null);
+                    } else {
+                        return true;
+                    }
                 }
             } else if (jsonObject.getString("type").equals(MessageType.NAVIGATION.name())) {
                 Spot value = SpotRepository.getInstance().getMySpotTakenLiveData().getValue();
