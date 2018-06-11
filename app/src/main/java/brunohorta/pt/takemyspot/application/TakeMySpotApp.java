@@ -8,7 +8,7 @@ import brunohorta.pt.takemyspot.preferences.LocationPreferences;
 import brunohorta.pt.takemyspot.preferences.SpotPreferences;
 
 public class TakeMySpotApp extends Application {
-    //TODO https://github.com/AltBeacon/altbeacon-transmitter-android
+
     private static TakeMySpotApp mInstance;
     private String pushToken;
     private LocationPreferences locationPreferences;

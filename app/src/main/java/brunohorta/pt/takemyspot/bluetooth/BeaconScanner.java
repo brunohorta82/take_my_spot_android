@@ -1,7 +1,4 @@
 package brunohorta.pt.takemyspot.bluetooth;
-/**
- * Created by Nikolay Vasilev on 11/30/2015.
- */
 
 import android.os.RemoteException;
 import android.util.Log;
@@ -35,13 +32,9 @@ public abstract class BeaconScanner {
     public void scan() {
         if (mBeaconManager == null) {
             mBeaconManager = BeaconManager.getInstanceForApplication(TakeMySpotApp.getInstance());
-
             List<BeaconParser> beaconParsers = mBeaconManager.getBeaconParsers();
-            //if (beaconParsers.size() <= 0) {
             beaconParsers.add(new BeaconParser()
-                    .setBeaconLayout(BeaconsContants.BEACONS_LAYOUT_CONDUCTOR));
-            //}
-
+                    .setBeaconLayout(BeaconsConstants.BEACONS_LAYOUT_CONDUCTOR));
             mBeaconManager.setForegroundScanPeriod(1000);
         }
 

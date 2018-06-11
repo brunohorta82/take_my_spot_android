@@ -22,9 +22,7 @@ import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-/**
- * Repository handling the work with products and comments.
- */
+
 public class NavigationRepository {
 
     private static NavigationRepository sInstance;

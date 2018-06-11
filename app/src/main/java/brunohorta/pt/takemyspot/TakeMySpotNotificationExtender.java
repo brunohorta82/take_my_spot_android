@@ -40,14 +40,6 @@ public class TakeMySpotNotificationExtender extends NotificationExtenderService 
                         || jsonObject.getString(SENDER_ID).equals(TakeMySpotApp.getInstance().getPushToken())) {
                     return true;
                 }
-                //Intent i = new Intent(TakeMySpotApp.getInstance(), PossibleSpotEvaluatorService.class);
-                //i.putExtra(LocationPreferences.LATITUDE, jsonObject.getDouble(LocationPreferences.LATITUDE));
-                //i.putExtra(LocationPreferences.LONGITUDE, jsonObject.getDouble(LocationPreferences.LONGITUDE));
-                //i.putExtra(PossibleSpotEvaluatorService.SENDER_ID, jsonObject.getString(PossibleSpotEvaluatorService.SENDER_ID));
-                //i.putExtra(PossibleSpotEvaluatorService.SPOT_ID, jsonObject.getLong(PossibleSpotEvaluatorService.SPOT_ID));
-                //i.putExtra(PossibleSpotEvaluatorService.TIMESTAMP, jsonObject.getLong(PossibleSpotEvaluatorService.TIMESTAMP));
-                //PossibleSpotEvaluatorService.enqueueWork(TakeMySpotApp.getInstance(), PossibleSpotEvaluatorService.class, 1000, i);
-
                 String senderId = jsonObject.getString(SENDER_ID);
                 long spotId = jsonObject.getLong(SPOT_ID);
                 if (SpotRepository.getInstance().getCurrentInterestingSpot() == null && TakeMySpotApp.getInstance().getPushToken() != null && !TakeMySpotApp.getInstance().getPushToken().equals(senderId)) {
@@ -79,7 +71,6 @@ public class TakeMySpotNotificationExtender extends NotificationExtenderService 
             } else if (jsonObject.getString("type").equals(MessageType.RESERVED.name()) &&
                     SpotRepository.getInstance().isSpotInteresting(timestamp, latitude, longitude)) {
                 Spot spot = new Spot(System.currentTimeMillis(), jsonObject.getLong(SPOT_ID),
-                        //jsonObject.getString(PossibleSpotEvaluatorService.SENDER_ID),
                         TakeMySpotApp.getInstance().getPushToken(),
                         jsonObject.getDouble(LocationPreferences.LATITUDE),
                         jsonObject.getDouble(LocationPreferences.LONGITUDE));
@@ -104,7 +95,7 @@ public class TakeMySpotNotificationExtender extends NotificationExtenderService 
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Log.d("OneSignalExample", "Notification displayed");
+        Log.d("OneSignal", "Notification displayed");
         return false;
     }
 }

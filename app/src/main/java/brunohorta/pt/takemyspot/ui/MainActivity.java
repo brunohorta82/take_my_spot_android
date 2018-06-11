@@ -46,7 +46,7 @@ import java.util.Arrays;
 import brunohorta.pt.takemyspot.R;
 import brunohorta.pt.takemyspot.application.TakeMySpotApp;
 import brunohorta.pt.takemyspot.bluetooth.BeaconScanner;
-import brunohorta.pt.takemyspot.bluetooth.BeaconsContants;
+import brunohorta.pt.takemyspot.bluetooth.BeaconsConstants;
 import brunohorta.pt.takemyspot.databinding.ActivityMainBinding;
 import brunohorta.pt.takemyspot.entity.Spot;
 import brunohorta.pt.takemyspot.viewmodel.MainViewModel;
@@ -95,12 +95,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void init() {
         linearTimer = new LinearTimer.Builder()
                 .linearTimerView(mDataBinding.linearTimer)
-                //.duration(60 * 1000)
                 .duration(60 * 1000)
                 .build();
         linearTimerMySpot = new LinearTimer.Builder()
                 .linearTimerView(mDataBinding.linearTimerMySpot)
-                //.duration(60 * 1000)
                 .duration(60 * 1000)
                 .build();
         mDataBinding.btnTakeSpot.setOnClickListener(new View.OnClickListener() {
@@ -113,7 +111,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 try {
                     linearTimer = new LinearTimer.Builder()
                             .linearTimerView(mDataBinding.linearTimer)
-                            //.duration(60 * 1000)
                             .duration(60 * 1000)
                             .build();
                     linearTimer.startTimer();
@@ -182,11 +179,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             } catch (Exception e) {
                             }
                             try {
-                                /*linearTimer = new LinearTimer.Builder()
-                                        .linearTimerView(mDataBinding.linearTimer)
-                                        //.duration(60 * 1000)
-                                        .duration(60 * 1000)
-                                        .build();*/
                                 linearTimer.startTimer();
                             } catch (IllegalStateException e) {
                                 e.printStackTrace();
@@ -240,20 +232,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         } catch (Exception e) {
                         }
                         try {
-                            /*linearTimer = new LinearTimer.Builder()
-                                    .linearTimerView(mDataBinding.linearTimer)
-                                    //.duration(60 * 1000)
-                                    .duration(60 * 1000)
-                                    .build();*/
                             linearTimer.startTimer();
                         } catch (IllegalStateException e) {
                             e.printStackTrace();
                         }
                     }
-                    //mDataBinding.btnTakeSpot.setEnabled(false);
                 } else {
                     mDataBinding.linearTimer.setVisibility(View.INVISIBLE);
-                    //mDataBinding.btnTakeSpot.setEnabled(true);
                     verifyCurrentInterestingSpot(model.getInterestingSpot());
                 }
                 if (spot != null && spot.isValidated()) {
@@ -331,7 +316,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         System.out.println("error");
                     }
                 });
-                //mDataBinding.tvLocation.setText(locationResult.getLastLocation() == null ? "-, -" : (locationResult.getLastLocation().getLatitude() + ", " + locationResult.getLastLocation().getLongitude()));
                 if (model.getMySpotTakenLiveData().getValue() == null) {
                     verifyCurrentInterestingSpot(model.getInterestingSpot());
                 }
@@ -353,8 +337,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void enterExitReservedSpotMode(boolean enter) {
-        //mDataBinding.btnTakeSpot.setVisibility(enter ? View.INVISIBLE : View.VISIBLE);
-        //mDataBinding.clInterestingSpot.setVisibility(enter ? View.VISIBLE : View.INVISIBLE);
         mDataBinding.tvTitle.setVisibility(enter ? View.INVISIBLE : View.VISIBLE);
         mDataBinding.tvReserved.setVisibility(enter ? View.INVISIBLE : View.VISIBLE);
         mDataBinding.ibAccept.setVisibility(enter ? View.INVISIBLE : View.VISIBLE);
@@ -393,17 +375,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void startBeaconMode() {
         if (checkPrerequisites()) {
-            // Sets up to transmit as an AltBeacon-style beacon.  If you wish to transmit as a different
-            // type of beacon, simply provide a different parser expression.  To find other parser expressions,
-            // for other beacon types, do a Google search for "setBeaconLayout" including the quotes
-            mBeaconTransmitter = new BeaconTransmitter(this, new BeaconParser().setBeaconLayout(BeaconsContants.BEACONS_LAYOUT_CONDUCTOR));
-            // Transmit a beacon with Identifiers 2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6 1 2
+            mBeaconTransmitter = new BeaconTransmitter(this, new BeaconParser().setBeaconLayout(BeaconsConstants.BEACONS_LAYOUT_CONDUCTOR));
             Beacon beacon = new Beacon.Builder()
                     .setBluetoothName("TakeMySpot")
                     .setId1(TakeMySpotApp.getInstance().getPushToken())
                     .setId2("1")
                     .setId3("2")
-                    .setManufacturer(0x0000) // Choose a number of 0x00ff or less as some devices cannot detect beacons with a manufacturer code > 0x00ff
+                    .setManufacturer(0x0000)
                     .setTxPower(-59)
                     .setDataFields(Arrays.asList(new Long[]{0l}))
                     .build();
@@ -421,7 +399,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    //TODO finish();
+
                 }
 
             });
@@ -437,7 +415,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    //TODO finish();
+
                 }
 
             });
@@ -453,7 +431,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    //TODO finish();
+
                 }
 
             });
@@ -472,7 +450,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    //TODO finish();
+
                 }
 
             });
