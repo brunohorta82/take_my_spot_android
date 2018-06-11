@@ -220,6 +220,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onChanged(@Nullable Spot spot) {
                 if (spot == null) {
+                    try {
+                        linearTimerMySpot.pauseTimer();
+                    } catch (IllegalStateException e) {
+                    }
                     mDataBinding.linearTimerMySpot.setVisibility(View.GONE);
                     mDataBinding.btnTakeSpot.setVisibility(View.VISIBLE);
                 }
@@ -254,6 +258,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 if (spot != null && spot.isValidated()) {
                     model.dismissMyTakenSpot();
+                    mDataBinding.linearTimerMySpot.setVisibility(View.GONE);
                     Toast.makeText(getApplicationContext(), "The driver who reserved your spot has arrived! Thanks for your time", Toast.LENGTH_LONG).show();
                 }
             }

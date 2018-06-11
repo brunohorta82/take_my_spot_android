@@ -19,6 +19,7 @@ import com.vividsolutions.jts.util.GeometricShapeFactory;
 import java.lang.reflect.Type;
 import java.util.Date;
 
+import brunohorta.pt.takemyspot.Constants;
 import brunohorta.pt.takemyspot.api.SpotsAPI;
 import brunohorta.pt.takemyspot.application.TakeMySpotApp;
 import brunohorta.pt.takemyspot.entity.Spot;
@@ -56,7 +57,7 @@ public class SpotRepository {
                 .create();
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.20:8080")
+                .baseUrl(Constants.API_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
         spotsAPI = retrofit.create(SpotsAPI.class);

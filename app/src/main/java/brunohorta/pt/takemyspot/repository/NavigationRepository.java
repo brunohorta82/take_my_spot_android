@@ -14,6 +14,7 @@ import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 import java.util.Date;
 
+import brunohorta.pt.takemyspot.Constants;
 import brunohorta.pt.takemyspot.api.NavigationAPI;
 import brunohorta.pt.takemyspot.application.TakeMySpotApp;
 import brunohorta.pt.takemyspot.entity.NavigationNotification;
@@ -46,7 +47,7 @@ public class NavigationRepository {
                 .create();
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.20:8080")
+                .baseUrl(Constants.API_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
         navigationAPI = retrofit.create(NavigationAPI.class);
